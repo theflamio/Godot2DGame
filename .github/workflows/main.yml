@@ -1,14 +1,14 @@
-name: Godot Build
+name: Godot Windows Build
 
 on:
   push:
     branches:
-      - main  # Change this to your branch name if needed
+      - main  # Adjust if your default branch is different
   pull_request:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Using Ubuntu to run the workflow
 
     steps:
       - name: Checkout Repository
@@ -16,18 +16,24 @@ jobs:
 
       - name: Download Godot
         run: |
-          GODOT_VERSION="4.3"  # Change to match your version
-          wget https://github.com/godotengine/godot/releases/download/$GODOT_VERSION-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
-          unzip Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
-          mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 godot
-          chmod +x godot
+          GODOT_VERSION="4.3"
+          wget https://downloads.tuxfamily.org/godotengine/$GODOT_VERSION/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          unzip Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip -d godot
+          chmod +x godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64
 
-      - name: Build Game
+      - name: Set Up Export Templates
         run: |
-          ./godot --export-release "Linux/X11" ./build/game.x86_64
+          mkdir -p ~/.local/share/godot/export_templates/$GODOT_VERSION.stable/
+          wget https://downloads.tuxfamily.org/godotengine/$GODOT_VERSION/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+          unzip Godot_v${GODOT_VERSION}-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/$GODOT_VERSION.stable/
 
-      - name: Upload Build Artifact
+      - name: Export Windows Build
+        run: |
+          mkdir -p build/windows
+          godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --export-release "Windows Desktop" build/windows/game.exe
+
+      - name: Upload Windows Build
         uses: actions/upload-artifact@v4
         with:
-          name: game-build
-          path: build/game.x86_64
+          name: game-windows
+          path: build/windows/game.exe
